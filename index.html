@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Dario Barber - El Juego</title>
+    <!-- Fuentes de Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Estilos CSS Unificados y Responsivos -->
+    <style>
+        /* Estilos base */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #000;
+            font-size: 16px; 
+        }
+        
+        #juego {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 9999; 
+        }
+
+        /* --- Pantalla de Inicio --- */
+        .start-screen-container {
+            height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1.25rem;
+            box-sizing: border-box;
+            text-align: center;
+            background-image: url('assets/back.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .game-description {
+            color: #FFFFFF;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-shadow: 0.125rem 0.125rem 0.25rem rgba(0, 0, 0, 0.7);
+            max-width: 90%;
+            margin-top: 5vh;
+            margin-bottom: 20vh;
+            font-family: 'Inter', sans-serif;
+        }
+        .play-button {
+            background-color: #c9302c;
+            color: #f0f0f0;
+            border: 0.25rem solid #f0f0f0;
+            border-radius: 0.9375rem;
+            padding: 1.25rem 2.5rem;
+            box-shadow: 0 0.5rem 0.9375rem rgba(0, 0, 0, 0.4);
+            font-family: 'Anton', sans-serif;
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.125rem;
+            text-decoration: none;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .play-button:hover {
+            transform: translateY(-0.3125rem);
+            box-shadow: 0 0.75rem 1.25rem rgba(0, 0, 0, 0.5);
+        }
+
+        /* --- Pantalla de Juego --- */
+        #gameCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: none; 
+            background-image: url('assets/back.png');
+            background-size: cover;
+            background-position: center;
+        }
+        #ui-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 1.25rem;
+            box-sizing: border-box;
+            color: white;
+            font-family: 'Anton', sans-serif;
+            font-size: 2rem;
+            text-shadow: 0.125rem 0.125rem 0.25rem #000;
+            display: none; 
+            justify-content: space-between;
+            align-items: center;
+        }
+        #gameOverScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            display: none; 
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-family: 'Anton', sans-serif;
+        }
+        #gameOverTitle {
+            font-size: 3.5rem;
+            margin-bottom: 0.625rem;
+        }
+        #finalScore {
+            font-size: 2rem;
+            margin-bottom: 1.25rem;
+        }
+        #restartButton {
+            background-color: #c9302c;
+            color: #f0f0f0;
+            border: 0.25rem solid #f0f0f0;
+            border-radius: 0.9375rem;
+            padding: 1.25rem 2.5rem;
+            font-size: 2rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        #restartButton:hover {
+            transform: scale(1.1);
+        }
+
+        /* --- Pantalla de Premio y Encuesta --- */
+        #prizeScreen {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            color: white;
+            display: none; 
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-family: 'Anton', sans-serif;
+            padding: 1rem;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        #prizeTitle {
+            font-size: 3.5rem;
+            color: #FFD700;
+        }
+        #prizeDescription, #prizeWon {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        #prizeWon {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #8BC34A;
+            text-shadow: 0.125rem 0.125rem 0.25rem rgba(0, 0, 0, 0.5);
+            margin-bottom: 1rem;
+        }
+        #prizeForm {
+            display: flex;
+            flex-direction: column;
+            width: 90%;
+            max-width: 500px;
+        }
+        #prizeForm input {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.2rem;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border-radius: 0.625rem;
+            border: 3px solid #f0f0f0;
+            background-color: #333;
+            color: white;
+            text-align: center;
+        }
+        .survey-question {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.2rem;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .survey-options {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            width: 100%;
+            margin: 0 auto;
+            max-width: 300px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+        .survey-options label {
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        .survey-options input[type="radio"] {
+            margin-right: 0.75rem;
+            cursor: pointer;
+            transform: scale(1.5);
+        }
+        /* Ocultar todas las encuestas y pasos por defecto */
+        .survey-container, .survey-step {
+            display: none;
+        }
+        #validateButton, #restartButtonPrize {
+            background-color: #c9302c;
+            color: #f0f0f0;
+            border: 0.25rem solid #f0f0f0;
+            border-radius: 0.9375rem;
+            padding: 1rem 2rem;
+            font-size: 1.8rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-family: 'Anton', sans-serif;
+            margin-top: 1rem;
+        }
+        #restartButtonPrize {
+            background-color: #555;
+            font-size: 1.5rem;
+            padding: 0.75rem 1.5rem;
+        }
+        #validateButton:hover, #restartButtonPrize:hover {
+            transform: scale(1.1);
+        }
+
+        /* --- Media Queries --- */
+        @media (max-height: 700px), (max-width: 380px) {
+            .game-description { font-size: 1.3rem; }
+            .play-button { font-size: 2.2rem; padding: 1rem 2rem; }
+            #ui-container { font-size: 1.5rem; }
+            #gameOverTitle, #prizeTitle { font-size: 2.5rem; }
+            #finalScore, #prizeDescription, #prizeWon { font-size: 1.2rem; }
+            #restartButton, #validateButton { font-size: 1.5rem; padding: 0.8rem 1.5rem; }
+            #prizeForm input { font-size: 1rem; }
+            #restartButtonPrize { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div id="juego">
+        
+        <div class="start-screen-container">
+            <p class="game-description">Ayuda a Darío a recoger solo sus herramientas de trabajo</p>
+            <button class="play-button">¡Jugar!</button>
+        </div>
+
+        <canvas id="gameCanvas"></canvas>
+        <div id="ui-container">
+            <div id="timer">Tiempo: 60</div>
+            <div id="score">Puntos: 0</div>
+        </div>
+        
+        <div id="gameOverScreen">
+            <h1 id="gameOverTitle">¡Juego Terminado!</h1>
+            <p id="finalScore">Puntos: 0</p>
+            <button id="restartButton">Volver a Jugar</button>
+        </div>
+
+        <div id="prizeScreen">
+            <h1 id="prizeTitle">¡Ganaste!</h1>
+            <p id="prizeWon">Premio por cargar...</p>
+            <p id="prizeDescription">¡Felicidades! Para validar, completa el formulario:</p>
+            
+            <form id="prizeForm">
+                <!-- Campos para la primera vez -->
+                <div id="firstTimeFields" style="display: none;">
+                    <input type="text" id="name" name="name" placeholder="Nombre y Apellido">
+                    <input type="email" id="email" name="email" placeholder="Correo Electrónico">
+                </div>
+                
+                <!-- Campo de teléfono, siempre visible en el formulario de premio -->
+                <input type="tel" id="phone" name="phone" placeholder="Tu Teléfono">
+                
+                <!-- ENCUESTA 1: Cliente Frecuente -->
+                <div id="surveyFrequentClient" class="survey-container">
+                    <div class="survey-step" id="surveyStep1_FrequentClient">
+                        <p class="survey-question">¿Te gustaría acceder a beneficios por ser cliente frecuente?</p>
+                        <div class="survey-options">
+                            <label><input type="radio" name="frequentClient" value="yes"> Sí</label>
+                            <label><input type="radio" name="frequentClient" value="no"> No</label>
+                        </div>
+                    </div>
+                    <div class="survey-step" id="surveyStep2_FrequentClient_yes">
+                        <p class="survey-question">¿Qué tipo de beneficios te interesan más?</p>
+                        <div class="survey-options">
+                            <label><input type="radio" name="benefitType" value="discounts"> Descuentos por visitas</label>
+                            <label><input type="radio" name="benefitType" value="free_cut"> Un corte gratis cada X visitas</label>
+                            <label><input type="radio" name="benefitType" value="products"> Productos de regalo</label>
+                        </div>
+                    </div>
+                    <div class="survey-step" id="surveyStep2_FrequentClient_no">
+                        <p class="survey-question">¿Por qué no te interesan los beneficios?</p>
+                        <div class="survey-options">
+                            <label><input type="radio" name="noBenefitReason" value="not_frequent"> No suelo venir seguido</label>
+                            <label><input type="radio" name="noBenefitReason" value="no_interest"> No me interesan los descuentos</label>
+                            <label><input type="radio" name="noBenefitReason" value="pay_for_use"> Me gusta pagar por lo que uso</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ENCUESTA 2: Ambiente -->
+                <div id="surveyAmbiance" class="survey-container">
+                    <div class="survey-step" id="surveyStep1_Ambiance">
+                        <p class="survey-question">¿Qué te parece el ambiente de la barbería?</p>
+                        <div class="survey-options">
+                            <label><input type="radio" name="ambianceFeedback" value="A"> Muy bueno</label>
+                            <label><input type="radio" name="ambianceFeedback" value="B"> Mejorable</label>
+                        </div>
+                    </div>
+                    <div class="survey-step" id="surveyStep2_Ambiance_A">
+                        <p class="survey-question">¿Qué parte del ambiente te gusta más?</p>
+                        <div class="survey-options">
+                            <label><input type="radio" name="ambianceDetail" value="music"> La música</label>
+                            <label><input type="radio" name="ambianceDetail" value="decoration"> La decoración</label>
+                            <label><input type="radio" name="ambianceDetail" value="team_vibe"> La onda general del equipo</label>
+                        </div>
+                    </div>
+                    <div class="survey-step" id="surveyStep2_Ambiance_B">
+                        <p class="survey-question">¿Qué te gustaría que cambiáramos?</p>
+                        <div class="survey-options">
+                            <label><input type="radio" name="ambianceImprovement" value="music_type"> Tipo de música</label>
+                            <label><input type="radio" name="ambianceImprovement" value="aroma_cleaning"> Aromas o limpieza</label>
+                            <label><input type="radio" name="ambianceImprovement" value="noise_light"> Nivel de ruido o iluminación</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ENCUESTA 3: Precio-Calidad -->
+                <div id="surveyPriceQuality" class="survey-container">
+                    <div class="survey-step" id="surveyStep1_PriceQuality">
+                        <p class="survey-question">¿Cómo sentís la relación precio-calidad de nuestros servicios?</p>
+                        <div class="survey-options">
+                            <label><input type="radio" name="priceQualityFeedback" value="A"> Justa</label>
+                            <label><input type="radio" name="priceQualityFeedback" value="B"> Un poco cara</label>
+                            <label><input type="radio" name="priceQualityFeedback" value="C"> Muy económica</label>
+                        </div>
+                    </div>
+                    <div class="survey-step" id="surveyStep2_PriceQuality_A">
+                        <p class="survey-question">¿Qué hace que lo sientas justo?</p>
+                        <div class="survey-options">
+                            <label><input type="radio" name="priceQualityReason" value="result_worth_it"> El resultado lo vale</label>
+                            <label><input type="radio" name="priceQualityReason" value="attention_compensates"> La atención lo compensa</label>
+                            <label><input type="radio" name="priceQualityReason" value="ambiance_adds_value"> El ambiente suma mucho</label>
+                        </div>
+                    </div>
+                    <div class="survey-step" id="surveyStep2_PriceQuality_BC">
+                        <p class="survey-question">¿Qué mejorarías o mantendrías para que te siga cerrando?</p>
+                        <div class="survey-options">
+                            <label><input type="radio" name="priceQualityImprovement" value="more_promos"> Agregar más promos</label>
+                            <label><input type="radio" name="priceQualityImprovement" value="service_packs"> Ofrecer packs de servicios</label>
+                            <label><input type="radio" name="priceQualityImprovement" value="maintain_quality"> Mantener la calidad actual</label>
+                        </div>
+                    </div>
+                </div>
+
+
+                <button type="submit" id="validateButton">Validar Premio</button>
+            </form>
+            <button id="restartButtonPrize">Volver a Jugar</button>
+        </div>
+    </div>
+
+    <!-- Lógica JavaScript -->
+    <script>
+        window.addEventListener('load', function() {
+            // --- ELEMENTOS DEL DOM ---
+            const startScreen = document.querySelector('.start-screen-container');
+            const playButton = document.querySelector('.play-button');
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            const uiContainer = document.getElementById('ui-container');
+            const timerDisplay = document.getElementById('timer');
+            const scoreDisplay = document.getElementById('score');
+            const gameOverScreen = document.getElementById('gameOverScreen');
+            const gameOverTitle = document.getElementById('gameOverTitle');
+            const finalScoreDisplay = document.getElementById('finalScore');
+            const restartButton = document.getElementById('restartButton');
+            const prizeScreen = document.getElementById('prizeScreen');
+            const prizeTitle = document.getElementById('prizeTitle');
+            const prizeDescription = document.getElementById('prizeDescription');
+            const prizeWonDisplay = document.getElementById('prizeWon');
+            const prizeForm = document.getElementById('prizeForm');
+            const validateButton = document.getElementById('validateButton');
+            const restartButtonPrize = document.getElementById('restartButtonPrize');
+            
+            // Elementos del formulario dinámico
+            const firstTimeFields = document.getElementById('firstTimeFields');
+            const nameInput = document.getElementById('name');
+            const emailInput = document.getElementById('email');
+            const phoneInput = document.getElementById('phone');
+            
+            // Contenedores de encuestas
+            const surveyFrequentClient = document.getElementById('surveyFrequentClient');
+            const surveyAmbiance = document.getElementById('surveyAmbiance');
+            const surveyPriceQuality = document.getElementById('surveyPriceQuality');
+
+
+            // --- ESTADO DEL JUEGO ---
+            let gameTime = 60;
+            let score = 0;
+            let gameOver = false;
+            let gameLoopId;
+            let timerId;
+            let isGameRunning = false;
+            let lastTime = 0;
+            let currentSurvey = ''; // Para saber qué encuesta se está mostrando
+            let currentPrize = ''; // Para almacenar el premio ganado
+
+            // --- Lógica de Escalado ---
+            const BASE_WIDTH = 414;
+            let scaleFactor = window.innerWidth / BASE_WIDTH;
+            let GRAVITY = 0.5 * scaleFactor;
+            let PLAYER_JUMP_FORCE = 15 * scaleFactor;
+            let POWERUP_JUMP_FORCE = 25 * scaleFactor;
+            let PLAYER_MOVE_SPEED = 5 * scaleFactor;
+
+            // --- CARGA DE IMÁGENES ---
+            const images = {};
+            const imageSources = {
+                playerRight: 'assets/personaje.png',
+                playerLeft: 'assets/personaje2.png',
+                powerUp1: 'assets/tijeras.png',
+                powerUp2: 'assets/navaja.png'
+            };
+
+            function loadImages() {
+                const promises = Object.keys(imageSources).map(key => {
+                    return new Promise((resolve, reject) => {
+                        const img = new Image();
+                        img.src = imageSources[key];
+                        img.onload = () => { images[key] = img; resolve(); };
+                        img.onerror = () => reject(new Error(imageSources[key]));
+                    });
+                });
+                return Promise.all(promises);
+            }
+
+            // --- CLASES DEL JUEGO ---
+            class Player {
+                constructor() {
+                    this.width = 50 * scaleFactor; this.height = 50 * scaleFactor;
+                    this.x = canvas.width / 2 - this.width / 2; this.y = canvas.height - (100 * scaleFactor);
+                    this.velocityX = 0; this.velocityY = 0;
+                    this.isMovingLeft = false; this.isMovingRight = false;
+                    this.currentImage = images.playerRight;
+                }
+                draw() { if (this.currentImage?.complete) ctx.drawImage(this.currentImage, this.x, this.y, this.width, this.height); }
+                update(deltaTime) {
+                    const norm = deltaTime / 16.67;
+                    if (this.isMovingLeft) { this.velocityX = -PLAYER_MOVE_SPEED; this.currentImage = images.playerLeft; } 
+                    else if (this.isMovingRight) { this.velocityX = PLAYER_MOVE_SPEED; this.currentImage = images.playerRight; }
+                    else { this.velocityX = 0; }
+                    this.x += this.velocityX * norm;
+                    this.velocityY += GRAVITY * norm;
+                    this.y += this.velocityY * norm;
+                    if (this.x + this.width < 0) this.x = canvas.width;
+                    else if (this.x > canvas.width) this.x = -this.width;
+                    if (this.y > canvas.height) triggerEndGame();
+                }
+            }
+
+            class Platform {
+                constructor(y, isMoving = false) {
+                    this.width = 100 * scaleFactor; this.height = 20 * scaleFactor;
+                    const third = canvas.width / 3; const rand = Math.random();
+                    if (rand < 0.45) this.x = Math.random() * (third - this.width);
+                    else if (rand < 0.90) this.x = (2 * third) + Math.random() * (third - this.width);
+                    else this.x = third + Math.random() * (third - this.width);
+                    this.y = y; this.isMoving = isMoving;
+                    this.speed = (Math.random() * 2 + 1) * (Math.random() < 0.5 ? 1 : -1) * scaleFactor;
+                }
+                draw() { ctx.fillStyle = '#654321'; ctx.fillRect(this.x, this.y, this.width, this.height); }
+                update(deltaTime) { 
+                    if (this.isMoving) { 
+                        this.x += this.speed * (deltaTime / 16.67); 
+                        if (this.x <= 0 || this.x + this.width >= canvas.width) this.speed *= -1; 
+                    } 
+                }
+            }
+
+            class Item {
+                constructor(platform) {
+                    this.width = 40 * scaleFactor; this.height = 40 * scaleFactor;
+                    this.x = platform.x + platform.width / 2 - this.width / 2; this.y = platform.y - this.height;
+                    this.image = null; this.type = 'none';
+                    const rand = Math.random();
+                    if (rand < 0.07) { this.type = 'powerUp1'; this.image = images.powerUp1; }
+                    else if (rand < 0.14) { this.type = 'powerUp2'; this.image = images.powerUp2; }
+                }
+                draw() { if (this.type !== 'none' && this.image?.complete) ctx.drawImage(this.image, this.x, this.y, this.width, this.height); }
+            }
+
+            // --- LÓGICA PRINCIPAL DEL JUEGO ---
+            let player; let platforms = []; let items = [];
+
+            function initGame() {
+                gameOver = false; isGameRunning = true; gameTime = 60; score = 0;
+                timerDisplay.textContent = `Tiempo: ${gameTime}`;
+                scoreDisplay.textContent = `Puntos: ${score}`;
+                gameOverScreen.style.display = 'none';
+                prizeScreen.style.display = 'none';
+                player = new Player(); platforms = []; items = [];
+                const initialPlatform = new Platform(canvas.height - (50 * scaleFactor));
+                initialPlatform.x = canvas.width / 2 - initialPlatform.width / 2;
+                platforms.push(initialPlatform);
+                player.y = initialPlatform.y - player.height;
+                player.velocityY = -PLAYER_JUMP_FORCE;
+                let y = canvas.height - (50 * scaleFactor);
+                while (y > -100) {
+                    y -= (Math.random() * 50 + 110) * scaleFactor; 
+                    const newPlatform = new Platform(y, Math.random() < 0.40);
+                    platforms.push(newPlatform); items.push(new Item(newPlatform));
+                }
+            }
+            
+            function handleCollisionsAndScroll(deltaTime) {
+                const norm = deltaTime / 16.67;
+                platforms.forEach(platform => {
+                    if (player.velocityY > 0 && player.x < platform.x + platform.width && player.x + player.width > platform.x && player.y + player.height > platform.y && player.y + player.height < platform.y + platform.height + (10 * scaleFactor * norm)) {
+                        player.velocityY = -PLAYER_JUMP_FORCE;
+                    }
+                });
+                items.forEach((item, index) => {
+                    if (item.type.includes('powerUp') && player.x < item.x + item.width && player.x + player.width > item.x && player.y < item.y + item.height && player.y + player.height > item.y) {
+                        player.velocityY = -POWERUP_JUMP_FORCE; items.splice(index, 1); score++;
+                        scoreDisplay.textContent = `Puntos: ${score}`;
+                    }
+                });
+                if (player.y < canvas.height / 2 && player.velocityY < 0) {
+                    const scrollOffset = -player.velocityY * norm;
+                    platforms.forEach(p => p.y += scrollOffset); items.forEach(i => i.y += scrollOffset);
+                    player.y += scrollOffset;
+                    platforms = platforms.filter(p => p.y < canvas.height);
+                    items = items.filter(i => i.y < canvas.height);
+                    const lastPlatformY = platforms[platforms.length - 1].y;
+                    if (lastPlatformY > 0) {
+                        const newY = lastPlatformY - (Math.random() * 50 + 110) * scaleFactor;
+                        const newPlatform = new Platform(newY, Math.random() < 0.40);
+                        platforms.push(newPlatform); items.push(new Item(newPlatform));
+                    }
+                }
+            }
+
+            function gameLoop(timestamp) {
+                if (gameOver) return;
+                let deltaTime = timestamp - lastTime;
+                if (deltaTime > 100) deltaTime = 16.67;
+                lastTime = timestamp;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                player.update(deltaTime); 
+                platforms.forEach(p => p.update(deltaTime));
+                handleCollisionsAndScroll(deltaTime);
+                platforms.forEach(p => p.draw()); 
+                items.forEach(i => i.draw()); 
+                player.draw();
+                gameLoopId = requestAnimationFrame(gameLoop);
+            }
+
+            function runGame() {
+                if (isGameRunning) return;
+                initGame();
+                lastTime = performance.now();
+                requestAnimationFrame(gameLoop);
+                timerId = setInterval(() => {
+                    gameTime--; timerDisplay.textContent = `Tiempo: ${gameTime}`;
+                    if (gameTime <= 0) {
+                        timerDisplay.textContent = `Tiempo: 0`;
+                        triggerEndGame();
+                    }
+                }, 1000);
+            }
+
+            function getTodayDateString() {
+                const today = new Date();
+                return today.toISOString().split('T')[0];
+            }
+
+            function setupFormForFirstTime() {
+                currentSurvey = 'firstTime';
+                firstTimeFields.style.display = 'block';
+                surveyFrequentClient.style.display = 'none';
+                surveyAmbiance.style.display = 'none';
+                surveyPriceQuality.style.display = 'none';
+                nameInput.required = true;
+                emailInput.required = true;
+                phoneInput.required = true;
+            }
+
+            function setupFormForReturningPlayer(surveyToShow) {
+                currentSurvey = surveyToShow;
+                firstTimeFields.style.display = 'none';
+                phoneInput.required = true;
+                
+                surveyFrequentClient.style.display = surveyToShow === 'frequentClient' ? 'block' : 'none';
+                surveyAmbiance.style.display = surveyToShow === 'ambiance' ? 'block' : 'none';
+                surveyPriceQuality.style.display = surveyToShow === 'priceQuality' ? 'block' : 'none';
+
+                if (surveyToShow === 'frequentClient') {
+                    document.getElementById('surveyStep1_FrequentClient').style.display = 'block';
+                    document.querySelectorAll('input[name="frequentClient"]').forEach(r => r.required = true);
+                } else if (surveyToShow === 'ambiance') {
+                    document.getElementById('surveyStep1_Ambiance').style.display = 'block';
+                     document.querySelectorAll('input[name="ambianceFeedback"]').forEach(r => r.required = true);
+                } else if (surveyToShow === 'priceQuality') {
+                     document.getElementById('surveyStep1_PriceQuality').style.display = 'block';
+                    document.querySelectorAll('input[name="priceQualityFeedback"]').forEach(r => r.required = true);
+                }
+            }
+
+            function triggerEndGame() {
+                if (gameOver) return;
+                gameOver = true; isGameRunning = false;
+                cancelAnimationFrame(gameLoopId); clearInterval(timerId);
+                uiContainer.style.display = 'none';
+
+                if (gameTime <= 0) { // Condición de victoria
+                    const todayStr = getTodayDateString();
+                    const lastPlayDate = localStorage.getItem('darioBarberLastPlay');
+                    
+                    if (lastPlayDate === todayStr) {
+                        gameOverTitle.textContent = "¡Gran Partida!";
+                        finalScoreDisplay.textContent = "Ya ganaste tu premio por hoy. ¡Vuelve mañana por más!";
+                        gameOverScreen.style.display = 'flex';
+                    } else {
+                        const rand = Math.random();
+                        if (rand < 0.25) currentPrize = "2x1 en tu siguiente compra";
+                        else if (rand < 0.50) currentPrize = "30% OFF en tu siguiente compra";
+                        else currentPrize = "Corte de barba ¡SIN CARGO!";
+                        prizeWonDisplay.textContent = currentPrize;
+                        
+                        const hasRegistered = localStorage.getItem('darioBarberHasRegistered');
+                        const surveyAmbianceDone = localStorage.getItem('darioBarberSurveyAmbiance');
+                        const surveyPriceQualityDone = localStorage.getItem('darioBarberSurveyPriceQuality');
+
+                        if (!hasRegistered) {
+                            setupFormForFirstTime();
+                        } else if (!surveyAmbianceDone) {
+                            setupFormForReturningPlayer('ambiance');
+                        } else if (!surveyPriceQualityDone) {
+                             setupFormForReturningPlayer('priceQuality');
+                        } else {
+                           // Si ya completó todo, podría mostrar la primera encuesta de nuevo o un mensaje
+                           setupFormForReturningPlayer('frequentClient'); 
+                        }
+                        prizeScreen.style.display = 'flex';
+                    }
+                } else { // Condición de derrota (caída)
+                    gameOverTitle.textContent = "¡Juego Terminado!";
+                    finalScoreDisplay.textContent = `Puntos: ${score}`;
+                    gameOverScreen.style.display = 'flex';
+                }
+            }
+
+            function handleTouchStart(e) { if (!isGameRunning) return; e.preventDefault(); const touchX = e.touches[0].clientX; if (touchX < canvas.width / 2) player.isMovingLeft = true; else player.isMovingRight = true; }
+            function handleTouchEnd(e) { if (!isGameRunning) return; e.preventDefault(); player.isMovingLeft = false; player.isMovingRight = false; }
+            
+            function handleResize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                scaleFactor = window.innerWidth / BASE_WIDTH;
+                GRAVITY = 0.5 * scaleFactor;
+                PLAYER_JUMP_FORCE = 15 * scaleFactor;
+                POWERUP_JUMP_FORCE = 25 * scaleFactor;
+                PLAYER_MOVE_SPEED = 5 * scaleFactor;
+                if (isGameRunning) {
+                    gameTime = 1;
+                    triggerEndGame();
+                    gameOverTitle.textContent = "¡Pantalla redimensionada!";
+                    finalScoreDisplay.textContent = "El juego se detuvo. ¡Vuelve a jugar!";
+                }
+            }
+            
+            function main() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                playButton.addEventListener('click', () => {
+                    startScreen.style.display = 'none';
+                    canvas.style.display = 'block';
+                    uiContainer.style.display = 'flex';
+                    runGame();
+                });
+                canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+                canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+                restartButton.addEventListener('click', () => window.location.reload());
+                restartButtonPrize.addEventListener('click', () => window.location.reload());
+
+                // Lógica de encuestas condicionales
+                // Encuesta 1: Cliente Frecuente
+                document.querySelectorAll('input[name="frequentClient"]').forEach(radio => {
+                    radio.addEventListener('change', (e) => {
+                        const yesStep = document.getElementById('surveyStep2_FrequentClient_yes');
+                        const noStep = document.getElementById('surveyStep2_FrequentClient_no');
+                        if (e.target.value === 'yes') {
+                            yesStep.style.display = 'block';
+                            noStep.style.display = 'none';
+                            document.querySelectorAll('input[name="benefitType"]').forEach(r => r.required = true);
+                            document.querySelectorAll('input[name="noBenefitReason"]').forEach(r => r.required = false);
+                        } else {
+                            yesStep.style.display = 'none';
+                            noStep.style.display = 'block';
+                            document.querySelectorAll('input[name="benefitType"]').forEach(r => r.required = false);
+                            document.querySelectorAll('input[name="noBenefitReason"]').forEach(r => r.required = true);
+                        }
+                    });
+                });
+
+                // Encuesta 2: Ambiente
+                 document.querySelectorAll('input[name="ambianceFeedback"]').forEach(radio => {
+                    radio.addEventListener('change', (e) => {
+                        const stepA = document.getElementById('surveyStep2_Ambiance_A');
+                        const stepB = document.getElementById('surveyStep2_Ambiance_B');
+                        if (e.target.value === 'A') {
+                            stepA.style.display = 'block';
+                            stepB.style.display = 'none';
+                            document.querySelectorAll('input[name="ambianceDetail"]').forEach(r => r.required = true);
+                            document.querySelectorAll('input[name="ambianceImprovement"]').forEach(r => r.required = false);
+                        } else { // 'B'
+                            stepA.style.display = 'none';
+                            stepB.style.display = 'block';
+                             document.querySelectorAll('input[name="ambianceDetail"]').forEach(r => r.required = false);
+                            document.querySelectorAll('input[name="ambianceImprovement"]').forEach(r => r.required = true);
+                        }
+                    });
+                });
+
+                // Encuesta 3: Precio-Calidad
+                document.querySelectorAll('input[name="priceQualityFeedback"]').forEach(radio => {
+                    radio.addEventListener('change', (e) => {
+                        const stepA = document.getElementById('surveyStep2_PriceQuality_A');
+                        const stepBC = document.getElementById('surveyStep2_PriceQuality_BC');
+                        if (e.target.value === 'A') {
+                            stepA.style.display = 'block';
+                            stepBC.style.display = 'none';
+                             document.querySelectorAll('input[name="priceQualityReason"]').forEach(r => r.required = true);
+                            document.querySelectorAll('input[name="priceQualityImprovement"]').forEach(r => r.required = false);
+                        } else { // 'B' o 'C'
+                            stepA.style.display = 'none';
+                            stepBC.style.display = 'block';
+                            document.querySelectorAll('input[name="priceQualityReason"]').forEach(r => r.required = false);
+                            document.querySelectorAll('input[name="priceQualityImprovement"]').forEach(r => r.required = true);
+                        }
+                    });
+                });
+
+
+                prizeForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+
+                    // URL de tu aplicación web de Google Apps Script
+                    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx02i46aV0OU8PoXtMEC-HqIOlmVW7RR1zGTshdDzm3SePS8VruRCgbcUCoM56VlXcW/exec";
+
+                    const submitButton = document.getElementById('validateButton');
+                    submitButton.disabled = true; // Deshabilitar botón para evitar envíos múltiples
+                    submitButton.textContent = 'Enviando...';
+
+                    // Crear un objeto FormData con los datos del formulario
+                    const formData = new FormData(prizeForm);
+                    
+                    // Añadir datos que no están en el formulario directamente
+                    formData.append('formType', currentSurvey); // Identifica qué encuesta se está enviando
+                    formData.append('prize', currentPrize);     // Añade el premio ganado
+
+                    // Enviar los datos usando fetch
+                    fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.result === 'success') {
+                            // Si todo salió bien, actualizamos el localStorage y mostramos el mensaje de gracias
+                            if (currentSurvey === 'firstTime') {
+                                localStorage.setItem('darioBarberHasRegistered', 'true');
+                            } else if (currentSurvey === 'ambiance') {
+                                localStorage.setItem('darioBarberSurveyAmbiance', 'true');
+                            } else if (currentSurvey === 'priceQuality') {
+                                localStorage.setItem('darioBarberSurveyPriceQuality', 'true');
+                            }
+                            localStorage.setItem('darioBarberLastPlay', getTodayDateString());
+                            
+                            // Mostrar mensaje de agradecimiento
+                            prizeForm.style.display = 'none';
+                            prizeWonDisplay.style.display = 'none';
+                            prizeTitle.textContent = "¡Gracias!";
+                            prizeDescription.textContent = "Tu premio ha sido validado. ¡Te esperamos!";
+                        } else {
+                            // Si hubo un error en el servidor
+                            throw new Error(data.message || 'Error desconocido del servidor.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al enviar el formulario:', error);
+                        prizeDescription.textContent = "Hubo un error al validar tu premio. Inténtalo de nuevo.";
+                        submitButton.disabled = false; // Volver a habilitar el botón
+                        submitButton.textContent = 'Validar Premio';
+                    });
+                });
+
+                window.addEventListener('resize', handleResize);
+            }
+
+            loadImages()
+                .then(main)
+                .catch(error => {
+                    const failedPath = error.message;
+                    console.error(`Error al cargar la imagen: ${failedPath}`);
+                    const errorContainer = document.querySelector('.start-screen-container');
+                    errorContainer.innerHTML = `<div style="padding:1.25rem;background-color:#c9302c;color:white;text-align:center;border-radius:15px;font-family:'Inter',sans-serif;"><h2 style="font-family:'Anton',sans-serif;margin-top:0;">¡Error!</h2><p>No se pudo encontrar el recurso: <strong>${failedPath}</strong>.</p><p style="margin-top:20px;">Asegúrate de que la ruta al archivo sea correcta. Si estás trabajando localmente, considera usar una extensión como "Live Server".</p></div>`;
+                });
+        });
+    </script>
+</body>
+</html>
